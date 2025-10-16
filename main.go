@@ -95,6 +95,38 @@ func ReturnBook(c *gin.Context) {
 	book.Quantity += 1
 	c.IndentedJSON(http.StatusOK, book)
 }
+func UpdateBook(c *gin.Context) {
+	id := c.Param("id")
+	var updatedBook book
+	if err := c.BindJSON(&updatedBook); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "invalid request body"})
+	}
+
+	for i, b := range books {
+		if b.ID == id {
+			updatedBook.ID = id
+			books[i] = updatedBook
+			c.IndentedJSON(http.StatusOK, updatedBook)
+			return
+		}
+	}
+
+	c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "book not found"})
+
+}
+
+func DeleteBook(c *gin.Context) {
+	id := c.Param("id")
+	for i, b := range books {
+		if b.ID == id {
+			books = append(books[:i], books[i+1:]...)
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Book deleted successfully"})
+			return
+		}
+
+	}
+	c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Book not found!!"})
+}
 
 func main() {
 	router := gin.Default()
@@ -102,7 +134,9 @@ func main() {
 	router.GET("/books/:id", BookID)
 	router.PATCH("/checkout", CheckoutBook)
 	router.PATCH("/return", ReturnBook)
+	router.PUT("/books/:id", UpdateBook)
 	router.POST("/books", CreateBooks)
+	router.DELETE("/books/:id", DeleteBook)
 
 	router.Run("localhost:8082")
 }
